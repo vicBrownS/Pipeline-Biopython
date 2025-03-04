@@ -1,0 +1,79 @@
+LOCUS       V00342                  1671 bp    DNA     linear   BCT 18-APR-2005
+DEFINITION  E. coli gene rpsA coding for ribosomal protein S1.
+ACCESSION   V00342
+VERSION     V00342.1
+KEYWORDS    ribosomal protein; ribosomal protein S1.
+SOURCE      Escherichia coli
+  ORGANISM  Escherichia coli
+            Bacteria; Pseudomonadati; Pseudomonadota; Gammaproteobacteria;
+            Enterobacterales; Enterobacteriaceae; Escherichia.
+REFERENCE   1  (bases 1 to 1671)
+  AUTHORS   Schnier,J., Kimura,M., Foulaki,K., Subramanian,A.R., Isono,K. and
+            Wittmann-Liebold,B.
+  TITLE     Primary structure of Escherichia coli ribosomal protein S1 and of
+            its gene rpsA
+  JOURNAL   Proc. Natl. Acad. Sci. U.S.A. 79 (4), 1008-1011 (1982)
+   PUBMED   7041110
+FEATURES             Location/Qualifiers
+     source          1..1671
+                     /organism="Escherichia coli"
+                     /mol_type="genomic DNA"
+                     /strain="K12, strain JS6.5"
+                     /db_xref="taxon:562"
+     CDS             1..1671
+                     /note="unnamed protein product; reading frame S1"
+                     /codon_start=1
+                     /transl_table=11
+                     /protein_id="CAA23630.1"
+                     /db_xref="GOA:P0AG67"
+                     /db_xref="InterPro:IPR000110"
+                     /db_xref="InterPro:IPR003029"
+                     /db_xref="InterPro:IPR012340"
+                     /db_xref="InterPro:IPR016027"
+                     /db_xref="InterPro:IPR018032"
+                     /db_xref="InterPro:IPR022967"
+                     /db_xref="PDB:2BH8"
+                     /db_xref="PDB:2KHI"
+                     /db_xref="PDB:2KHJ"
+                     /db_xref="UniProtKB/Swiss-Prot:P0AG67"
+                     /translation="MTESFAQLFEESLKEIETRPGSIVRGVVVAIDKDVVLVDAGLKS
+                     ESAIPAEQFKNAQGELEIQVGDEVDVALDAVEDGFGETLLSREKAKRHEAWITLEKAY
+                     EDAETVTGVINGKVKGGFTVELNGIRAFLPGSLVDVRPVRDTLHLEGKELEFKVIKLD
+                     QKRNNVVVSRRAVIESENSADDQLLENLQEGMEVKGIVKNLTDYGAFVDLGGVDGLLH
+                     ITDMAWKRVKHPSEIVNVGDEITVKVLKFDRERTRVSLGLKQLGEDPWVAIAKRYPEG
+                     TKLTGRVTNLTDYGCFVEIEEGVEGLVHVSEMDWTNKNIHPSKVVNVGDVVEVMVLDI
+                     DEERRRISLGLKQCKANPWQQFAETHNKGDRVEGKIKSITDFGIFIGLDGGIDGLVHL
+                     SDISWNVAGEEAVREYKKGDEIAAVVLQVDAERERISLGVKQLAEDPFNNWVALNKKG
+                     AIVTGKVTAVDAKGATVELADGVEGYLRASEASRDRVEDATLVLSVGDEVEAKFTGVD
+                     RKNRAISLSVRAKDEADEKDAIATVNKQEDANFSNNAMAEAFKAAKGE"
+ORIGIN      
+        1 atgactgaat cttttgctca actctttgaa gagtccttaa aagaaatcga aacccgcccg
+       61 ggttctatcg ttcgtggcgt tgttgttgct atcgacaaag acgtagtact ggttgacgct
+      121 ggtctgaaat ctgagtccgc catcccggct gagcagttca aaaacgccca gggcgagctg
+      181 gaaatccagg taggtgacga agttgacgtt gctctggacg cagtagaaga cggcttcggt
+      241 gaaactctgc tgtcccgtga gaaagctaaa cgtcacgaag cctggatcac gctggaaaaa
+      301 gcttacgaag atgctgaaac tgttaccggt gttatcaacg gcaaagttaa gggcggcttc
+      361 actgttgagc tgaacggtat tcgtgcgttc ctgccaggtt ctctggtaga cgttcgtccg
+      421 gtgcgtgaca ctctgcacct ggaaggcaaa gagcttgaat ttaaagtaat caagctggat
+      481 cagaagcgca acaacgttgt tgtttctcgt cgtgccgtta tcgaatccga aaacagcgca
+      541 gacgatcagc tgctggaaaa cctgcaggaa ggcatggaag ttaaaggtat cgttaagaac
+      601 ctcactgact acggtgcatt cgttgatctg ggcggcgttg acggcctgct gcacatcact
+      661 gacatggcct ggaaacgcgt taagcatccg agcgaaatcg tcaacgtggg cgacgaaatc
+      721 actgttaaag tgctgaagtt cgaccgcgaa cgtacccgtg tatccctggg cctgaaacag
+      781 ctgggcgaag atccgtgggt agctatcgct aaacgttatc cggaaggtac caaactgact
+      841 ggtcgcgtga ccaacctgac cgactacggc tgcttcgttg aaatcgaaga aggcgttgaa
+      901 ggcctggtac acgtttccga aatggactgg accaacaaaa acatccaccc gtccaaagtt
+      961 gttaacgttg gcgatgtagt ggaagttatg gttctggata tcgacgaaga acgtcgtcgt
+     1021 atctccctgg gtctgaaaca gtgcaaagct aacccgtggc agcagttcgc ggaaacccac
+     1081 aacaagggcg accgtgttga aggtaaaatc aagtctatca ctgacttcgg tatcttcatc
+     1141 ggcttggacg gcggcatcga cggcctggtt cacctgtctg acatctcctg gaacgttgca
+     1201 ggcgaagaag cagttcgtga atacaaaaaa ggcgacgaaa tcgctgcagt tgttctgcag
+     1261 gttgacgcag aacgtgaacg tatctccctg ggcgttaaac agctcgcaga agatccgttc
+     1321 aacaactggg ttgctctgaa caagaaaggc gctatcgtaa ccggtaaagt aactgcagtt
+     1381 gacgctaaag gcgcaaccgt agaactggct gacggcgttg aaggttacct gcgtgcttct
+     1441 gaagcatccc gtgaccgcgt tgaagacgct accctggttc tgagcgttgg cgacgaagtt
+     1501 gaagctaaat tcaccggcgt tgatcgtaaa aaccgcgcaa tcagcctgtc tgttcgtgcg
+     1561 aaagacgaag ctgacgagaa agatgcaatc gcaactgtta acaaacagga agatgcaaac
+     1621 ttctccaaca acgcaatggc tgaagctttc aaagcagcta aaggcgagta a
+//
+
