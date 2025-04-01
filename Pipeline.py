@@ -1,13 +1,14 @@
-from Utils import *
-from Bio import SeqIO
+import utils.traducciones
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from collections import Counter
 from typing import List, Dict, Tuple
-from Bio.SeqUtils import nt_search
-from Bio.Data import CodonTable
+from utils.alineamiento import smith_waterman, medir_rendimiento_custom, medir_rendimiento_biopython, guardar_resultados_alineamientos
+from utils.io_utils import guardar_records, convertir_formato, load_sequences, get_sequences_by_id
+from utils.traducciones import traducir_secuencias, retrotraducir_a_adn
+from utils.analisis import filter_sequences_by_length, obtener_estadisticas, buscar_motivos
 import logging
-
+import itertools
 
 class Pipeline:
     """
@@ -347,68 +348,8 @@ class Pipeline:
             self.lista_secuencias = list(unique.values())
 
     def guardar_records(self, lista_paths: List[str], lista_format: List[str], output_name: str):
-        """
-        Carga secuencias desde múltiples archivos y guarda todas las secuencias combinadas en un único archivo FASTA.
-
-        Parámetros:\n
-        - lista_paths (List[str]): Lista de rutas de los archivos que contienen las secuencias a cargar.
-        - lista_format (List[str]): Lista de formatos correspondientes a cada archivo (por ejemplo, 'fasta', 'fastq', 'genbank').
-          La longitud de esta lista debe coincidir con la de `lista_paths`.
-        - output_name (str): Nombre del archivo de salida donde se guardarán las secuencias combinadas (sin extensión).
-
-        Funcionamiento:\n
-        1. Verifica que las listas proporcionadas no sean nulas, tengan la misma longitud y contengan solo cadenas.
-        2. Si `output_name` no se proporciona, se asigna por defecto el nombre `"Secuencias"`.
-        3. Itera sobre las listas de archivos y formatos:
-           - Carga las secuencias usando `load_sequences()`.
-           - Si la secuencia cargada es una instancia de `SeqRecord`, la añade directamente a la lista `secuencias`.
-           - Si es un iterable (como una lista de `SeqRecord`), extiende la lista con todas las secuencias cargadas.
-        4. Guarda todas las secuencias combinadas en un archivo FASTA utilizando `save_sequences()`.
-
-        Excepciones:\n
-        - ValueError: Si las listas son nulas, tienen longitudes diferentes o contienen elementos no válidos.
-        - TypeError: Si algún elemento de las listas no es una cadena.
-
-        Notas: \n
-        - Esta función permite fusionar secuencias de diferentes archivos y formatos en un solo archivo.
-        - Si se cargan secuencias duplicadas, se guardarán tal como se cargaron a menos que se eliminen previamente.
-        - Se recomienda revisar las secuencias antes de guardarlas si se desea evitar duplicados.
-        """
-
-        #Verificaciones de validez de las listas de entrada
-        if lista_paths is None or lista_format is None:
-            raise ValueError("Las listas no pueden ser nulas")
-
-        if not len(lista_format) == len(lista_paths):
-            raise ValueError("Las listas deben ser de la misma longitud")
-
-        if not all(isinstance(path, str) for path in lista_paths) or not all(
-                isinstance(fmt, str) for fmt in lista_format):
-            raise ValueError("Las listas solo deben contener cadenas")
-
-        #Asignación de nombre de salida por defecto si no se proporciona
-        if output_name is None:
-            output_name = "Secuencias"
-
-        # Lista para almacenar todas las secuencias combinadas
-        secuencias = list()
-
-        #Cargar secuencias desde cada archivo especificado
-        for path,format in zip(lista_paths,lista_format):
-            secuencia = load_sequences(path, format, verbose=False)
-
-            #Si la carga devuelve una sola secuencia (SeqRecord), añádela directamente
-            if isinstance(secuencia, SeqRecord):
-                secuencias.append(secuencia)
-
-            #Si devuelve múltiples secuencias (iterable), extiende la lista
-            else:
-                secuencias.extend(secuencia)
-
-        #Guardar todas las secuencias cargadas en un único archivo FASTA
-        save_sequences(secuencias, f"data/{output_name}")
-
-        logging.info(f"Archivo {output_name}.fasta creado correctamente")
+        """Utiliza la función guardar_records del módulo io_utils"""
+        guardar_records(lista_paths, lista_format, output_name)
 
     def eliminar_secuencias_by_id(self, id: str = None, all: bool = False) -> int:
         """
@@ -581,422 +522,58 @@ class Pipeline:
 
     def obtener_estadisticas(self) -> dict:
         """
-        Calcula estadísticas generales sobre las secuencias en `lista_secuencias`.
-
-        Retorna:
-        - dict con:
-          - 'total_secuencias': Número total de secuencias.
-          - 'longitud_max': Longitud de la secuencia más larga.
-          - 'longitud_min': Longitud de la secuencia más corta.
-          - 'longitud_media': Promedio de longitud de las secuencias.
-          - 'contenido_gc_medio': Promedio del porcentaje de GC en todas las secuencias.
+        Utiliza la funcion de obtener_estadísticas del modulo analisis.py
         """
-
-        total_secuencias = len(self.lista_secuencias)
-
-        # Manejo de lista vacía
-        if total_secuencias == 0:
-            return {"total_secuencias": 0, "longitud_max": None, "longitud_min": None,
-                    "longitud_media": None, "contenido_gc_medio": None}
-
-        # Recorrer la lista solo una vez para calcular todas las estadísticas
-        total_longitudes = 0
-        total_gc = 0
-        longitud_max = -1.0
-        longitud_min = 100000.0
-
-        for secuencia in self.lista_secuencias:
-            len_seq = len(secuencia.seq)
-            total_longitudes += len_seq
-            total_gc += gc_content(secuencia.seq)
-
-            if len_seq > longitud_max:
-                longitud_max = len_seq
-            if len_seq < longitud_min:
-                longitud_min = len_seq
-
-        #Calcular valores finales
-        longitud_media = total_longitudes / total_secuencias
-        contenido_gc_medio = total_gc / total_secuencias
-
-        return {"total_secuencias": total_secuencias, "longitud_max": longitud_max, "longitud_min": longitud_min,
-                "longitud_media": longitud_media, "contenido_gc_medio": contenido_gc_medio}
+        return obtener_estadisticas(self)
 
 
     def convertir_formato(self, formato_salida: str, output_name: str):
         """
-        Convierte las secuencias cargadas a un nuevo formato y las guarda en un archivo.
-
-        Parámetros:
-        - formato_salida (str): Formato de salida ('fasta', 'genbank', 'fastq', etc.).
-        - output_name (str): Nombre del archivo de salida sin la extensión.
-
-        Retorna:
-        - None (guarda el archivo en el formato especificado).
-
-        Excepciones:
-        - ValueError: Si el formato de salida no es válido.
-        - ValueError: Si `self.lista_secuencias` está vacía.
+        Utiliza la funcion convertir formato del módulo io_utils
         """
-        # Validación del formato de salida
-        if not formato_salida or formato_salida.strip() == "":
-            raise ValueError("El formato de salida debe tener algún valor.")
-
-        # Mapeo de formatos compatibles con Biopython
-        formatos_validos = {"fasta", "genbank", "fastq"}
-
-        # Corregir formato en caso de alias (por ejemplo, "gb" → "genbank")
-        formato_salida = "genbank" if formato_salida == "gb" else formato_salida.lower()
-
-        if formato_salida not in formatos_validos:
-            raise ValueError(f"El formato de salida '{formato_salida}' no es válido. Opciones: {formatos_validos}")
-
-        # Verificación de lista vacía
-        if not self.lista_secuencias:
-            raise ValueError("No hay secuencias cargadas para convertir.")
-
-        # Asegurar que el nombre del archivo tenga la extensión correcta
-        extension_dict = {"fasta": ".fasta", "genbank": ".gb", "fastq": ".fastq"}
-        extension = extension_dict[formato_salida]
-        output_name = output_name.strip()
-        if not output_name.endswith(extension):
-            output_name += extension
-
-        # Solución para GenBank: Añadir molecule_type si falta
-        if formato_salida == "genbank":
-            for seq in self.lista_secuencias:
-                if "molecule_type" not in seq.annotations:
-                    if str(seq.seq).upper().find("U") == -1:
-                        seq.annotations["molecule_type"] = "DNA"
-                    else:
-                        seq.annotations["molecule_type"] = "RNA"
-
-        # Solución para FASTQ: Añadir valores de calidad ficticios si faltan
-        if formato_salida == "fastq":
-            for seq in self.lista_secuencias:
-                if "phred_quality" not in seq.letter_annotations:
-                    seq.letter_annotations["phred_quality"] = [40] * len(seq.seq)  # Calidad máxima ficticia
-
-        # Guardar las secuencias en el formato especificado
-        SeqIO.write(self.lista_secuencias, f"output/{output_name}", formato_salida)
-
-        logging.info(f"Archivo guardado como '{output_name}' en formato '{formato_salida}'.")
+        convertir_formato(self.lista_secuencias, formato_salida, output_name)
 
     def buscar_motivos(self, motivos: List[str]) -> Dict[str, Dict[str, List[int]]]:
         """
-        Busca la posición de uno o más motivos en cada secuencia.
-
-        Parámetros:
-        - motivos (List[str]): Lista de secuencias de ADN a buscar.
-
-        Retorna:
-        - Dict[str, Dict[str, List[int]]]:
-          Diccionario con los IDs de las secuencias y otro diccionario con:
-            - Claves: Motivos buscados.
-            - Valores: Lista con las posiciones donde aparece el motivo.
-
-        Excepciones:
-        - ValueError: Si la lista de motivos está vacía o contiene elementos no válidos.
+        Utiliza la función de buscar_motivos del modulo de analisis.py
         """
-
-        # Validaciones de entrada
-        if not motivos:
-            raise ValueError("La lista de motivos no puede estar vacía.")
-
-        if not all(isinstance(motivo, str) for motivo in motivos):
-            raise ValueError("Todos los motivos deben ser cadenas de texto (str).")
-
-        # Diccionario para almacenar los resultados
-        motivos_dict = {}
-
-        # Buscar motivos en cada secuencia
-        for record in self.lista_secuencias:
-            motivos_dict[record.id] = {}
-            for motivo in motivos:
-                posiciones = nt_search(str(record.seq), motivo.upper())
-                # Si el motivo se encuentra, almacenar posiciones
-                if len(posiciones) > 1:
-                    motivos_dict[record.id][motivo] = posiciones[1:]
-                else:
-                    motivos_dict[record.id][motivo] = []  # Si no se encuentra, lista vacía
-
-        return motivos_dict
+        diccionario_motivos = buscar_motivos(self,motivos)
+        return diccionario_motivos
 
     def traducir_secuencias(self, table: str or int = "Standard", to_stop: bool = False) -> Tuple[
         Dict[str, str], Dict[str, str]]:
         """
-        Traduce las secuencias de ADN en `lista_secuencias` a proteínas usando una tabla de traducción específica.
+        Utiliza la funcion de traducir secuencias del módulo traducciones.py
+        """
+        proteinas, errores = utils.traducciones.traducir_secuencias(table, to_stop)
+        return proteinas, errores
+
+
+    def retrotraducir_a_adn(self, ids: list[str]):
+        """
+        Utiliza la funcion de retrotraducir_a_adn del módulo traducción
+        """
+        retrotraducir_a_adn(self, ids)
+
+    def ejecutar_smith_waterman(self,matrix_name: str, gap_penalty: int, guardar_en: str = None):
+        """
+        Ejecuta el algoritmo Smith-Waterman sobre todas las combinaciones de pares de secuencias cargadas.
 
         Parámetros:
-        - table (str o int, opcional): Nombre o ID de la tabla de traducción genética.
-          Por defecto, usa la tabla "Standard".
-        - to_stop (bool, opcional): Si es `True`, la traducción se detiene en el primer codón de STOP.
+            matrix_name (str): Nombre de la matriz de sustitución (ej. 'blosum62').
+            gap_penalty (int): Penalización por inserción/eliminación.
+            guardar_en (str): Nombre del archivo donde guardar los resultados (opcional).
 
         Retorna:
-        - Tuple[Dict[str, str], Dict[str, str]]:
-          1️. Diccionario con las secuencias traducidas `{ID_secuencia: Proteína}`.
-          2️. Diccionario con secuencias que no se pudieron traducir `{ID_secuencia: Mensaje de error}`.
-
-        Excepciones:
-        - ValueError: Si `lista_secuencias` está vacía.
-        - KeyError: Si la tabla de traducción no es válida.
+            list: Resultados como lista de tuplas (id1, id2, aln1, aln2, score)
         """
+        resultados = []
+        for s1, s2 in itertools.combinations(self.lista_secuencias, 2):
+            aln1, aln2, score = smith_waterman(str(s1.seq), str(s2.seq), matrix_name, gap_penalty)
+            resultados.append((s1.id, s2.id, aln1, aln2, score))
 
-        # Verificar que haya secuencias
-        if not self.lista_secuencias:
-            raise ValueError("❌ Lista de secuencias vacía.")
+        if guardar_en:
+            guardar_resultados_alineamientos(resultados, guardar_en)
+            print(f"✅ Resultados guardados en '{guardar_en}'")
 
-        # Validar tabla de traducción
-        try:
-            if isinstance(table, str):
-                _ = CodonTable.unambiguous_dna_by_name[table]  # Validamos existencia
-            elif isinstance(table, int):
-                _ = CodonTable.unambiguous_dna_by_id[table]
-            else:
-                raise TypeError("El parámetro table debe ser un nombre o un ID válido.")
-        except KeyError:
-            raise KeyError(
-                f"Tabla de traducción '{table}' no encontrada. Tablas disponibles: {CodonTable.unambiguous_dna_by_id.keys()}")
-
-        diccionario_traduccion = {}
-        errores = {}
-
-        # Traducir secuencias
-        for seq_id, record in self.index_by_id.items():
-
-            secuencia_madura = self.obtener_secuencia_sin_exones(seq_id)
-
-            if len(secuencia_madura) % 3 != 0:
-                errores[seq_id] = f"Longitud incorrecta ({len(secuencia_madura)} nucleótidos). No se puede traducir."
-                continue  # Saltar a la siguiente secuencia
-
-            try:
-                traduccion = secuencia_madura.translate(table = table, to_stop = to_stop)
-                diccionario_traduccion[seq_id] = traduccion
-            except Exception as e:
-                errores[seq_id] = f"Error en la traducción: {e}"
-
-        # Mostrar errores encontrados (opcional)
-        if errores:
-            logging.info("\n Errores encontrados en las siguientes secuencias:")
-            for id_seq, error in errores.items():
-                logging.info(f" {id_seq}: {error}")
-
-        return diccionario_traduccion, errores
-
-
-def menu():
-    """Muestra las opciones del menú al usuario."""
-    print("\nMenú Principal")
-    print("1️⃣  Cargar secuencias desde un archivo")
-    print("2️⃣  Mostrar secuencias cargadas")
-    print("3️⃣  Buscar secuencia por ID o nombre")
-    print("4️⃣  Eliminar secuencias o duplicados")
-    print("5️⃣  Filtrar secuencias por longitud")
-    print("6️⃣  Buscar motivos en las secuencias")
-    print("7️⃣  Mostrar y asignar CDS/Exones")
-    print("8️⃣  Traducir secuencias")
-    print("9️⃣  Obtener estadísticas de secuencias")
-    print("🔟  Exportar secuencias en otro formato")
-    print("📥  11 - Combinar múltiples archivos en un solo FASTA")
-    print("0️⃣  Salir")
-
-
-def cargar_archivo(pipeline):
-    """Función para cargar un archivo de secuencias."""
-    file_path = input("Ingresa la ruta del archivo: ")
-    file_format = input("Ingresa el formato del archivo (fasta, genbank, fastq): ").lower()
-    pipeline.load_sequences(file_path, file_format)
-    print(f"Se cargaron {len(pipeline.lista_secuencias)} secuencias.")
-
-
-def mostrar_secuencias(pipeline):
-    """Muestra todas las secuencias cargadas."""
-    if not pipeline.lista_secuencias:
-        print("No hay secuencias cargadas.")
-        return
-    print(pipeline)
-
-
-def buscar_secuencia(pipeline):
-    """Busca una secuencia por ID o nombre."""
-    criterio = input("Buscar por (id/nombre): ").lower()
-    valor = input("Ingresa el ID o nombre: ")
-    if criterio == "id":
-        secuencia = pipeline.get_sequence_by_id(valor)
-    elif criterio == "nombre":
-        secuencia = pipeline.get_sequence_by_name(valor)
-    else:
-        print("Opción inválida.")
-        return
-    if secuencia:
-        print(f"Secuencia encontrada:\n{secuencia}")
-    else:
-        print("Secuencia no encontrada.")
-
-
-def eliminar_secuencias(pipeline):
-    """Elimina secuencias por ID o todas."""
-    opcion = input("Eliminar una secuencia (id) o todas (all): ").lower()
-    if opcion == "id":
-        seq_id = input("Ingresa el ID de la secuencia: ")
-        eliminadas = pipeline.eliminar_secuencias_by_id(seq_id)
-    elif opcion == "all":
-        eliminadas = pipeline.eliminar_secuencias_by_id(all=True)
-    else:
-        print("Opción inválida.")
-        return
-    print(f"{eliminadas} secuencia(s) eliminada(s).")
-
-
-def filtrar_secuencias(pipeline):
-    """Filtra secuencias según su longitud."""
-    try:
-        min_len = int(input("Ingresa la longitud mínima: "))
-        max_len = int(input("Ingresa la longitud máxima: "))
-        cantidad = pipeline.filtrar_secuencias_por_longitud(min_len, max_len)
-        print(f"Se filtraron {cantidad} secuencias en el rango especificado.")
-    except ValueError:
-        print("Ingresa valores numéricos válidos.")
-
-
-def buscar_motivos(pipeline):
-    """Busca motivos dentro de las secuencias."""
-    motivos = input("Ingresa los motivos a buscar (separados por comas): ").split(",")
-    resultados = pipeline.buscar_motivos(motivos)
-    for seq_id, coincidencias in resultados.items():
-        print(f"En la secuencia {seq_id}:")
-        for motivo, posiciones in coincidencias.items():
-            print(f"{motivo}: {posiciones}")
-
-
-def mostrar_y_asignar_cds(pipeline):
-    """Muestra CDS/exones y permite asignar manualmente un CDS."""
-    seq_id = input("Ingresa el ID de la secuencia: ")
-    if seq_id in pipeline.cds_dict:
-        print(f"CDS actual: {pipeline.cds_dict[seq_id]}")
-    if seq_id in pipeline.exones_dict:
-        print(f"Exones actuales: {pipeline.exones_dict[seq_id]}")
-
-    opcion = input("¿Quieres asignar un nuevo CDS? (y/n): ").lower()
-    if opcion == "y":
-        try:
-            inicio = int(input("Ingresa la posición de inicio: "))
-            final = int(input("Ingresa la posición final: "))
-            pipeline.asignar_cds(seq_id, inicio, final)
-            print(f"Nuevo CDS asignado: ({inicio}, {final})")
-        except ValueError:
-            print("Ingresa valores numéricos válidos.")
-
-
-def traducir_secuencias(pipeline):
-    """Traduce secuencias de ADN a proteínas."""
-    traducciones, errores = pipeline.traducir_secuencias()
-    for seq_id, proteina in traducciones.items():
-        print(f"{seq_id}: {proteina}")
-    for seq_id, error in errores.items():
-        print(f"{seq_id}: {error}")
-
-
-def obtener_estadisticas(pipeline):
-    """Muestra estadísticas de las secuencias cargadas."""
-    estadisticas = pipeline.obtener_estadisticas()
-    for key, value in estadisticas.items():
-        print(f"{key}: {value}")
-
-
-def exportar_secuencias(pipeline):
-    """Convierte y guarda secuencias en un nuevo formato."""
-    formato = input("Formato de salida (fasta, genbank, fastq): ").lower()
-    nombre = input("Nombre del archivo de salida: ")
-    pipeline.convertir_formato(formato, nombre)
-    print(f"Archivo guardado como {nombre}.{formato}")
-
-
-def guardar_records_prueba(pipeline):
-    """Carga secuencias desde múltiples archivos y guarda todas en un único archivo FASTA en 'data/'."""
-    print("📂 Vas a combinar múltiples archivos de secuencias en un solo archivo FASTA.")
-
-    # Pedir al usuario las rutas de los archivos
-    lista_paths = input("📝 Ingresa las rutas de los archivos (separadas por comas): ").split(",")
-
-    # Eliminar espacios en blanco alrededor de cada ruta
-    lista_paths = [path.strip() for path in lista_paths]
-
-    #Añadimos el directorio de donde provienven las secuencias
-    lista_paths = ["data/" + path for path in lista_paths]
-
-    # Verificar que los archivos existen
-    archivos_no_encontrados = [path for path in lista_paths if not os.path.exists(path)]
-    if archivos_no_encontrados:
-        print(f"⚠️ Los siguientes archivos no existen: {', '.join(archivos_no_encontrados)}")
-        return
-
-    # Pedir formatos para cada archivo
-    print("📄 Ahora ingresa los formatos de cada archivo en el mismo orden (fasta, genbank, fastq)")
-    lista_format = input("➡️ Formatos (separados por comas): ").lower().split(",")
-
-    # Eliminar espacios en blanco alrededor de cada formato
-    lista_format = [fmt.strip() for fmt in lista_format]
-
-    # Verificar que el número de archivos y formatos coincida
-    if len(lista_paths) != len(lista_format):
-        print("❌ Error: La cantidad de rutas y formatos no coincide. Intenta de nuevo.")
-        return
-
-    # Pedir nombre del archivo de salida
-    output_name = input("📁 Ingresa el nombre del archivo de salida (sin extensión): ").strip()
-
-
-    # Ejecutar guardar_records
-    pipeline.guardar_records(lista_paths, lista_format, output_name)
-
-    print(f"✅ Archivo combinado guardado en 'data/{output_name}.fasta'.")
-
-
-def main():
-    pipeline = Pipeline()
-    while True:
-        menu()
-        opcion = input("Ingresa el número de la opción: ")
-        if opcion == "1":
-            cargar_archivo(pipeline)
-        elif opcion == "2":
-            mostrar_secuencias(pipeline)
-        elif opcion == "3":
-            buscar_secuencia(pipeline)
-        elif opcion == "4":
-            eliminar_secuencias(pipeline)
-        elif opcion == "5":
-            filtrar_secuencias(pipeline)
-        elif opcion == "6":
-            buscar_motivos(pipeline)
-        elif opcion == "7":
-            mostrar_y_asignar_cds(pipeline)
-        elif opcion == "8":
-            traducir_secuencias(pipeline)
-        elif opcion == "9":
-            obtener_estadisticas(pipeline)
-        elif opcion == "10":
-            exportar_secuencias(pipeline)
-        elif opcion == "11":
-            guardar_records_prueba(pipeline)
-        elif opcion == "0":
-            print("Saliendo del programa...")
-            break
-        else:
-            print("Opción no válida, intenta nuevamente.")
-
-
-if __name__ == "__main__":
-    main()
-
-
-
-
-
-
-
-
-
-
+        return resultados
