@@ -1,7 +1,5 @@
 from Bio.Align import PairwiseAligner
 from Bio.Align import substitution_matrices
-from Bio.SeqRecord import SeqRecord
-from Bio.Seq import Seq
 import time
 import itertools
 
