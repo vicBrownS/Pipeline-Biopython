@@ -1,9 +1,21 @@
+"""
+Módulo de análisis y manipulación estructural de secuencias.
+
+Agrupa funciones que permiten aplicar filtros, obtener estadísticas básicas y transformar secuencias, especialmente en contextos genómicos.
+
+Funciones incluidas:
+- `filter_sequences_by_length`: Filtra secuencias por longitud mínima y/o máxima.
+- `obtener_estadisticas`: Devuelve estadísticas como longitud media, mínima y máxima.
+- `buscar_motivos`: Busca patrones o motivos en secuencias.
+
+Este módulo agrupa funciones de exploración y análisis ligero de las secuencias, separándolas de la lógica de alineamiento o traducción.
+"""
+
 from typing import List, Dict, Iterator
 from Bio.SeqUtils import nt_search
 from Bio.SeqIO import SeqRecord
 from Bio.Seq import Seq
-
-
+from Bio.SeqUtils import GC
 
 def buscar_motivos(self, motivos: List[str]) -> Dict[str, Dict[str, List[int]]]:
     """
@@ -74,7 +86,7 @@ def obtener_estadisticas(self) -> dict:
     for secuencia in self.lista_secuencias:
         len_seq = len(secuencia.seq)
         total_longitudes += len_seq
-        total_gc += gc_content(secuencia.seq)
+        total_gc += GC(secuencia.seq)
 
         if len_seq > longitud_max:
             longitud_max = len_seq

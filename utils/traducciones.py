@@ -1,3 +1,15 @@
+"""
+Módulo de traducción y retrotraducción de secuencias.
+
+Agrupa funciones relacionadas con la conversión entre secuencias de ADN y proteínas, manteniendo separado el procesamiento biológico básico del resto del pipeline.
+
+Funciones incluidas:
+- `traducir_secuencias`: Traduce múltiples secuencias desde la clase Pipeline.
+- `retrotraducir_a_adn`: Retrotraduce múltiples secuencias gestionadas desde Pipeline.
+
+Este módulo permite mantener separadas las operaciones moleculares comunes y facilita su mantenimiento y mejora.
+"""
+
 from typing import Dict
 from Bio.Data import CodonTable
 import logging

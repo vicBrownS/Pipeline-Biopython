@@ -1,9 +1,21 @@
+"""
+Módulo de alineamiento local de secuencias biológicas (Smith-Waterman).
+
+Contiene funciones relacionadas con el cálculo de alineamientos entre pares de secuencias, así como la comparación de rendimiento con herramientas estándar como Biopython.
+
+Funciones incluidas:
+- `smith_waterman`: Implementación manual del algoritmo Smith-Waterman.
+- `medir_rendimiento_custom`: Mide el tiempo de ejecución de la implementación propia.
+- `medir_rendimiento_biopython`: Mide el tiempo usando PairwiseAligner de Biopython.
+- `guardar_resultados_alineamientos`: Guarda alineamientos obtenidos.
+- `cargar_matriz_sustitucion`: Carga matrices como BLOSUM o PAM desde Biopython.
+
+Modularización realizada para aislar la lógica de alineamiento del resto del pipeline, permitiendo pruebas independientes y reutilización flexible.
+"""
 from Bio.Align import PairwiseAligner
 from Bio.Align import substitution_matrices
 import time
 import itertools
-
-
 
 def cargar_matriz_sustitucion(nombre: str) -> dict:
     """

@@ -1,11 +1,20 @@
-import os
+"""
+Módulo de utilidades de entrada/salida de secuencias biológicas.
+
+Contiene funciones auxiliares para guardar, convertir y procesar archivos en diferentes formatos compatibles con Biopython.
+
+Funciones incluidas:
+- `guardar_records`: Guarda un conjunto de secuencias en un archivo especificado.
+- `convertir_formato`: Convierte secuencias a otro formato (ej. de GenBank a FASTA).
+- `load_sequences`: Carga secuencias desde uno o varios archivos.
+- `get_sequences_by_id`: Obtiene una secuencia de un diccionario en funcion de su ID.
+- `save_sequences`: Agrupa secuencias de múltiples orígenes en una sola colección.
+
+Este módulo está diseñado para centralizar toda la lógica de archivos y formatos, evitando mezclarla con la lógica del procesamiento biológico.
+"""
+
 from collections.abc import Iterator
 
-from Bio.Seq import Seq
-from Bio.SeqUtils import gc_fraction
-
-import re
-from itertools import zip_longest
 from Bio import SeqIO
 from Bio.SeqIO import SeqRecord
 import logging

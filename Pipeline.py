@@ -12,43 +12,46 @@ import itertools
 
 class Pipeline:
     """
-    Clase que gestiona el procesamiento de secuencias biológicas (ADN, ARN y proteínas).
+    Clase que gestiona el procesamiento de secuencias biológicas (ADN, ARN y proteínas) mediante una arquitectura modular.
 
-    **Funcionalidades principales:** \n
-    1. **Carga de Secuencias:** \n
+    **Funcionalidades principales:**
+
+    1. **Carga y Gestión de Secuencias:**
        - `load_sequences(file_path, file_format)`: Carga secuencias desde archivos FASTA, GenBank o FASTQ.
-       - `add_sequences(sequences, reindex=True)`: Añade secuencias a la lista manualmente.
+       - `add_sequences(sequences, reindex=True)`: Añade nuevas secuencias manualmente.
+       - `eliminar_secuencias_by_id(seq_id, all=False)`: Elimina secuencias específicas o todas.
+       - `eliminar_duplicados(id=True, name=True)`: Elimina duplicados por ID o nombre.
+       - `index_sequences_by_id_name(force=False)`: Indexa secuencias para búsqueda rápida.
+       - `get_sequence_by_id(seq_id)` / `get_sequence_by_name(name)`: Accede a secuencias por ID o nombre.
 
-    2️. **Manejo de Secuencias:** \n
-       - `get_sequence_by_id(seq_id)`: Obtiene una secuencia específica por su ID.
-       - `get_sequence_by_name(name)`: Obtiene una secuencia por su nombre.
-       - `eliminar_secuencias_by_id(seq_id, all=False)`: Elimina secuencias específicas o todas a la vez.
-       - `eliminar_duplicados(id=True, name=True)`: Elimina secuencias duplicadas por ID o nombre.
-       - `index_sequences_by_id_name(force=False)`: Crea índices para acceso rápido a las secuencias.
+    2. **Procesamiento de Secuencias:**
+       - `filtrar_secuencias_por_longitud(...)`: Filtra secuencias por longitud mínima/máxima.
+       - `buscar_motivos(motivos)`: Encuentra posiciones de motivos en las secuencias.
+       - `asignar_cds(seq_id, inicio, final)`: Asigna regiones codificantes (CDS) manualmente.
+       - `obtener_secuencia_sin_exones(seq_id)`: Extrae la secuencia sin exones definidos.
 
-    3. **Procesamiento de Secuencias:** \n
-       - `filtrar_secuencias_por_longitud(min_len, max_len, reindex=True)`: Filtra secuencias según su longitud.
-       - `buscar_motivos(motivos)`: Busca posiciones de motivos dentro de las secuencias.
-       - `obtener_secuencia_sin_exones(seq_id)`: Extrae solo la región codificante (sin intrones).
-       - `asignar_cds(seq_id, inicio, final)`: Permite asignar manualmente una región CDS.
+    3. **Traducción y Retrotraducción:**
+       - `traducir_secuencias(table="Standard", to_stop=False)`: Traduce ADN a proteína usando la tabla genética especificada.
+       - `retrotraducir_a_adn(ids)`: Convierte secuencias proteicas a secuencias de ADN mediante codones canónicos.
 
-    4. **Análisis de Secuencias:** \n
-       - `obtener_estadisticas()`: Calcula estadísticas como longitud media y contenido GC.
+    4. **Alineamiento de Secuencias (Smith-Waterman):**
+       - `ejecutar_smith_waterman(matrix_name, gap_penalty, guardar_en=None)`: Aplica el algoritmo de alineamiento local Smith-Waterman entre todas las combinaciones de secuencias.
+       - Usa una matriz de sustitución (ej. BLOSUM62) y penalización por gap.
+       - Permite guardar los resultados en un archivo `.txt`.
+       - Comparación de rendimiento disponible con Biopython (`medir_rendimiento_*` desde `utils.alineamiento`).
 
-    5. **Traducción de Secuencias:** \n
-       - `traducir_secuencias(table="Standard", to_stop=False)`: Traduce secuencias de ADN a proteínas.
+    5. **Conversión y Guardado de Archivos:**
+       - `convertir_formato(formato_salida, output_name)`: Convierte las secuencias actuales a otro formato (FASTA, GenBank, etc.).
+       - `guardar_records(lista_paths, lista_format, output_name)`: Carga varios archivos de entrada y los fusiona en uno solo.
 
-    6. **Conversión y Guardado:** \n
-       - `convertir_formato(formato_salida, output_name)`: Convierte secuencias a FASTA, GenBank o FASTQ.
-       - `guardar_records(lista_paths, lista_format, output_name)`: Carga múltiples archivos y los guarda en un único FASTA.
+    6. **Análisis General:**
+       - `obtener_estadisticas()`: Calcula estadísticas como longitud media, mínima, máxima, etc.
 
-    **Notas:** \n
-        - Utiliza `SeqRecord` de Biopython para almacenar y manipular secuencias.
-        - Permite cargar secuencias desde múltiples archivos y combinarlas en un solo archivo FASTA.
-        - Soporta traducción con diferentes tablas genéticas y extracción de regiones codificantes (CDS, exones).
-        - Indexa secuencias para acceso rápido y permite filtrado por longitud o búsqueda de motivos.
+    **Notas:**
+    - Toda la lógica pesada está modularizada en `utils/` (traducciones, alineamientos, análisis, E/S).
+    - Las secuencias se gestionan mediante `SeqRecord` de Biopython.
+    - Se puede utilizar el pipeline desde menú interactivo (`menu_pipeline.py`) o desde un flujo automatizado (`main_pipeline.py`).
     """
-
 
     def __init__(self):
         """
