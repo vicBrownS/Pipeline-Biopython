@@ -548,7 +548,7 @@ class Pipeline:
         """
         Utiliza la funcion de traducir secuencias del módulo traducciones.py
         """
-        proteinas, errores = utils.traducciones.traducir_secuencias(table, to_stop)
+        proteinas, errores = traducir_secuencias(table, to_stop)
         return proteinas, errores
 
 
