@@ -15,7 +15,8 @@ from typing import List, Dict, Iterator
 from Bio.SeqUtils import nt_search
 from Bio.SeqIO import SeqRecord
 from Bio.Seq import Seq
-from Bio.SeqUtils import GC
+from Bio.SeqUtils import gc_fraction
+
 
 def buscar_motivos(self, motivos: List[str]) -> Dict[str, Dict[str, List[int]]]:
     """
@@ -86,7 +87,7 @@ def obtener_estadisticas(self) -> dict:
     for secuencia in self.lista_secuencias:
         len_seq = len(secuencia.seq)
         total_longitudes += len_seq
-        total_gc += GC(secuencia.seq)
+        total_gc += gc_fraction(secuencia.seq)
 
         if len_seq > longitud_max:
             longitud_max = len_seq

@@ -14,6 +14,7 @@ Este módulo está diseñado para centralizar toda la lógica de archivos y form
 """
 
 from collections.abc import Iterator
+from typing import List
 
 from Bio import SeqIO
 from Bio.SeqIO import SeqRecord

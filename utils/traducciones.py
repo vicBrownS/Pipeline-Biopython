@@ -10,7 +10,7 @@ Funciones incluidas:
 Este módulo permite mantener separadas las operaciones moleculares comunes y facilita su mantenimiento y mejora.
 """
 
-from typing import Dict
+from typing import Dict, Tuple
 from Bio.Data import CodonTable
 import logging
 from Bio.SeqIO import SeqRecord

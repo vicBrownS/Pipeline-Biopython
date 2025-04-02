@@ -2,7 +2,7 @@ import utils.traducciones
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
 from collections import Counter
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Iterator
 from utils.alineamiento import smith_waterman, medir_rendimiento_custom, medir_rendimiento_biopython, guardar_resultados_alineamientos
 from utils.io_utils import guardar_records, convertir_formato, load_sequences, get_sequences_by_id
 from utils.traducciones import traducir_secuencias, retrotraducir_a_adn
